@@ -11,6 +11,11 @@ import com.facebook.react.bridge.ReadableArray;
 import com.facebook.react.bridge.ReadableMap;
 import com.facebook.react.views.imagehelper.ImageSource;
 
+import com.facebook.drawee.backends.pipeline.Fresco;
+import com.facebook.imagepipeline.core.ImagePipeline;
+
+import java.io.File;
+
 class FastImageViewModule extends ReactContextBaseJavaModule {
 
     private static final String REACT_CLASS = "FastImageView";
@@ -50,6 +55,37 @@ class FastImageViewModule extends ReactContextBaseJavaModule {
                             .apply(FastImageViewConverter.getOptions(activity, imageSource, source))
                             .preload();
                 }
+            }
+        });
+    }
+    
+        private void clearImageCache(Activity activity) {
+        activity.getApplicationContext().getCacheDir().delete();
+        mReactContext.getCacheDir().delete();
+    }
+
+    @ReactMethod
+    public void clearCache() {
+        final Activity activity = getCurrentActivity();
+        if (activity == null) return;
+
+        ClearCacheTask clearCacheTask = new ClearCacheTask(activity.getApplicationContext(), mReactContext);
+        clearCacheTask.execute();
+        clearCacheTask.doInBackground();
+
+        Glide.getPhotoCacheDir(activity.getApplicationContext()).delete();
+        Glide.getPhotoCacheDir(mReactContext).delete();
+
+        activity.runOnUiThread(new Runnable() {
+            @Override
+            public void run() {
+                Glide.get(activity.getApplicationContext()).clearMemory();
+                Glide.get(mReactContext).clearMemory();
+
+                ImagePipeline imagePipeline = Fresco.getImagePipeline();
+                imagePipeline.clearCaches();
+
+                clearImageCache(activity);
             }
         });
     }
