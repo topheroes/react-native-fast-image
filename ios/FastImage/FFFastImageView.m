@@ -1,5 +1,6 @@
 #import "FFFastImageView.h"
 #import <SDWebImage/UIImage+MultiFormat.h>
+#import <SDWebImage/UIView+WebCache.h>
 
 @interface FFFastImageView()
 
@@ -232,5 +233,8 @@
                     }];
 }
 
-@end
+- (void)dealloc {
+    [self sd_cancelCurrentImageLoad];
+}
 
+@end

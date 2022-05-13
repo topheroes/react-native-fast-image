@@ -3,6 +3,8 @@ package com.dylanvann.fastimage;
 import android.app.Activity;
 
 import com.bumptech.glide.Glide;
+import com.bumptech.glide.load.model.GlideUrl;
+import com.facebook.react.bridge.Promise;
 import com.facebook.react.bridge.ReactApplicationContext;
 import com.facebook.react.bridge.ReactContextBaseJavaModule;
 import com.facebook.react.bridge.ReactMethod;
@@ -57,35 +59,33 @@ class FastImageViewModule extends ReactContextBaseJavaModule {
             }
         });
     }
-    
-        private void clearImageCache(Activity activity) {
-        activity.getApplicationContext().getCacheDir().delete();
-        mReactContext.getCacheDir().delete();
-    }
 
     @ReactMethod
-    public void clearCache() {
+    public void clearMemoryCache(final Promise promise) {
         final Activity activity = getCurrentActivity();
-        if (activity == null) return;
-
-        ClearCacheTask clearCacheTask = new ClearCacheTask(activity.getApplicationContext(), mReactContext);
-        clearCacheTask.execute();
-        clearCacheTask.doInBackground();
-
-        Glide.getPhotoCacheDir(activity.getApplicationContext()).delete();
-        Glide.getPhotoCacheDir(mReactContext).delete();
+        if (activity == null) {
+            promise.resolve(null);
+            return;
+        }
 
         activity.runOnUiThread(new Runnable() {
             @Override
             public void run() {
                 Glide.get(activity.getApplicationContext()).clearMemory();
-                Glide.get(mReactContext).clearMemory();
-
-                ImagePipeline imagePipeline = Fresco.getImagePipeline();
-                imagePipeline.clearCaches();
-
-                clearImageCache(activity);
+                promise.resolve(null);
             }
         });
+    }
+
+    @ReactMethod
+    public void clearDiskCache(Promise promise) {
+        final Activity activity = getCurrentActivity();
+        if (activity == null) {
+            promise.resolve(null);
+            return;
+        }
+
+        Glide.get(activity.getApplicationContext()).clearDiskCache();
+        promise.resolve(null);
     }
 }
